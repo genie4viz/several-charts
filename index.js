@@ -1,21 +1,6 @@
-let data = [],
-    singleColors = ["#e5f4f7", "#b0dfe8", "#7bc9d8", "#46b4c9", "#119eb9", "#0d8ca7", "#097996", "#046784", "005472", "#e5f4f7", "#b0dfe8", "#7bc9d8", "#46b4c9", "#119eb9", "#0d8ca7", "#097996", "#046784", "005472"],
-    fullColors = ["#a4517b", "#d75a3b", "#47a9b2", "#fffad9", "#4cb8d5", "#58f3af", "#feb8cf", "#007693", "#ea9865", "#a4517b", "#d75a3b", "#47a9b2", "#fffad9", "#4cb8d5", "#58f3af", "#feb8cf", "#007693", "#ea9865"],
-    patterns = ["pattern0", "pattern1", "pattern2", "pattern3", "pattern4", "pattern5", "pattern6", "pattern0", "pattern1", "pattern2", "pattern3", "pattern4", "pattern5", "pattern6"];
-
 // set the dimensions and margins of the graph
-let containerWidth = d3.select("#graph").style("width"),
-    containerHeight = d3.select("#graph").style("height");
-
-const filename = getUrlParam('file', ""),
-    re_filename = filename.replace(/~/g, '&'),
-    dim1 = getUrlParam('dim1', "") - 1,
-    dim2 = getUrlParam('dim2', "") - 1,
-    m = getUrlParam('m', "") - 1,
-    fill = getUrlParam('fill', 'single'),
-    end = getUrlParam('end', ""),
-    sorttype = getUrlParam('sort', "atoz"),
-    legend = getUrlParam('legend', "right");
+let containerWidth = d3.select("#graph-container").style("width"),
+    containerHeight = d3.select("#graph-container").style("height");
 
 appendGroupBar(re_filename, dim1, dim2, m, fill, end, sorttype, legend);
 
