@@ -52,6 +52,9 @@ function daysBetweenDates(startDate, endDate) {
   return dates;
 }
 
+function withComma(x) {
+  return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
 function nFormatter(num, digits) {
   var si = [
     { value: 1, symbol: "" },

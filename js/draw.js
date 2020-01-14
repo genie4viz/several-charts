@@ -79,8 +79,8 @@ function addLineChart(cWidth, cHeight, vData) {
       d === 0
         ? d
         : d < 0
-        ? `-${vData.currency_prefix + Math.abs(d)}`
-        : vData.currency_prefix + d
+        ? vData.currency_prefix + '(-' + withComma(Math.abs(d)) + ')'
+        : vData.currency_prefix + withComma(d)
     );
 
   // Draw the line
