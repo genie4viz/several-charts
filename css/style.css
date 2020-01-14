@@ -1,0 +1,54 @@
+body {
+  font-family: "Sans serif";
+  font-size: 12px;
+  background-color: #eaecf0;
+}
+
+#charts-container {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.chart {
+  margin: 2rem;
+  border: 1px solid green;
+}
+
+#line-chart-container {
+  display: flex;
+  flex-direction: column;
+}
+#line-chart-logo {
+  display: flex;
+}
+#line-chart-title {
+  display: flex;
+  width: 50%;
+  justify-content: center;
+  align-items: center;
+}
+#line-chart-legends {
+  display: flex;
+  width: 50%;
+  flex-direction: column;
+  /* text-align: center; */
+  /* align-items: center; */
+}
+#line-chart {
+  display: flex;
+}
+
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+table {
+  padding: 8px;
+}

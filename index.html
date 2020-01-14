@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<!-- <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'> -->
-<link href="./style.css" rel="stylesheet">
-<div id="graph-container">
+<meta charset="utf-8" />
+<link href="./css/style.css" rel="stylesheet" />
+<div id="charts-container">
+  <div id="line-chart-container" class="chart">
+    <div id="line-chart-logo">
+        <div id="line-chart-title"></div>
+        <div id="line-chart-legends"></div>
+    </div>
+    <div id="line-chart"></div>
+  </div>
+  <div id="bar-chart" class="chart"></div>
+  <div id="donut-chart" class="chart"></div>
 </div>
-<script src="./data.js"></script>
-<script src="./d3.v5.min.js"></script>
-<script src="./utils.js"></script>
-<script src="./index.js"></script>
-
+<script src="./js/libs/d3.v5.min.js"></script>
+<script src="./js/libs/moment.js"></script>
+<script src="./data/data.js"></script>
+<script src="./js/utils.js"></script>
+<script src="./js/draw.js"></script>
+<script src="./js/index.js"></script>
