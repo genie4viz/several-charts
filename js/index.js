@@ -15,7 +15,7 @@ function init() {
   addLineChart(
     c_width,
     c_height,
-    convertLineChartData(data.calculation_basis_balances)
+    convertLineChartData(data)
   );
   //   addBarChart();
   //   addDonutChart();

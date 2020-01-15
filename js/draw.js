@@ -99,8 +99,8 @@ function addLineChart(cWidth, cHeight, vData) {
         .x(d => x(new Date(d.date)))
         .y(d => y(d.total))(d.data)
     );
-  //Draw the circles
 
+  //Draw the circles
   vData.data.forEach((dd, i) => {
     svgG
       .selectAll(".circle")
@@ -114,6 +114,13 @@ function addLineChart(cWidth, cHeight, vData) {
       .attr("cy", d => y(d.total))
       .attr("r", 5);
   });
+
+  //Draw main_bank_account_overdraft_limit line
+  svgG
+    .append("path")
+    .attr("stroke", "grey")
+    .attr("stroke-width", 1.5)
+    .attr("d", `M0 ${y(vData.main_bank_account_overdraft_limit)}h${w}z`)
 }
 
 function addBarChart(width, height, v_data) {}

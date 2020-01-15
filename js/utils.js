@@ -6,13 +6,15 @@ function convertLineChartData(data) {
     totals_arr = [];
 
   console.log(data, "origin data");
+  const u_data = data.calculation_basis_balances.items;
+
   //get min, max date for range
-  for (let item in data.items) {
-    dates_arr.push(...data.items[item].items.dates);
-    totals_arr.push(...data.items[item].items.data.map(d => d.total));
+  for (let item in u_data) {
+    dates_arr.push(...u_data[item].items.dates);
+    totals_arr.push(...u_data[item].items.data.map(d => d.total));
     c_data.push({
-      label: data.items[item].label,
-      data: data.items[item].items.data
+      label: u_data[item].label,
+      data: u_data[item].items.data
     });
   }
 
@@ -30,6 +32,16 @@ function convertLineChartData(data) {
       }
     }
     c_data[i].data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    //replace empty data as previous day's data
+    for (let k = 0; k < c_data[i].data.length; k++) {
+      if (!c_data[i].data[k].total) {
+        if (c_data[i].data[k - 1] && c_data[i].data[k - 1].total) {
+          c_data[i].data[k].total = c_data[i].data[k - 1].total;
+        } else {
+          c_data[i].data[k].total = 0;
+        }
+      }
+    }
   }
 
   return {
@@ -37,7 +49,8 @@ function convertLineChartData(data) {
     days: all_days,
     total_max: d3.max(totals_arr),
     total_min: d3.min(totals_arr),
-    currency_prefix: data.currency_prefix
+    currency_prefix: data.calculation_basis_balances.currency_prefix || '',
+    main_bank_account_overdraft_limit: data.organisation_data.account.data.main_bank_account_overdraft_limit || 0
   };
 }
 
