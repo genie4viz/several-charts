@@ -1,6 +1,6 @@
 //draw functions
 
-function addLineChart(cWidth, cHeight, gd, ei) {
+function addLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   //gd: graph data, ei: extra_info
   //append title and legend
   const margin = { left: 70, top: 10, right: 50, bottom: 30 },
@@ -52,12 +52,15 @@ function addLineChart(cWidth, cHeight, gd, ei) {
   });
 
   //replace data with diff day
-  
-  gd.forEach(d => {
-    d.data = replaceWithDay(d.data, 5, days);
-  });  
+  let r_gd = [];
 
-  console.log(gd, "gggddd");
+  gd.forEach(d => {
+    r_gd.push({
+      label: d.label,
+      value: d.value,
+      data: replaceWithDay(d.data, diff_day, days)
+    });
+  });
 
   const y_max = d3.max(available_y_values),
     y_min = d3.min(available_y_values);
@@ -116,7 +119,7 @@ function addLineChart(cWidth, cHeight, gd, ei) {
   // Draw the line
   svgG
     .selectAll(".line")
-    .data(gd)
+    .data(r_gd)
     .enter()
     .append("path")
     .attr("fill", "none")
@@ -130,7 +133,7 @@ function addLineChart(cWidth, cHeight, gd, ei) {
     );
 
   //Draw the circles
-  gd.forEach(dd => {
+  r_gd.forEach(dd => {
     svgG
       .selectAll(".circle")
       .data(dd.data)
@@ -153,7 +156,10 @@ function addLineChart(cWidth, cHeight, gd, ei) {
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
 }
 
-function addBarChart(cWidth, cHeight, gd, ei) {
+function addBarChart(cWidth, cHeight, gd, duration_name, ei) {
+  console.log(gd, "origin gd");
+  let bgd = gd.filter(d => d.value === duration_name)[0];
+  console.log(bgd, "bgd");
   const margin = { left: 70, top: 10, right: 50, bottom: 30 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
@@ -182,7 +188,7 @@ function addBarChart(cWidth, cHeight, gd, ei) {
         legends[i * legend_rows + j]
           ? `<svg
         width="20" height="20"
-      ><circle cx="10" cy="10" r="5" stroke="${
+      ><rect width="20" height="20" stroke="${
         legends[i * legend_rows + j].color
       }" stroke-width="3" fill="white"/></svg>`
           : ""

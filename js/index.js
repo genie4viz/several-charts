@@ -30,14 +30,15 @@ function init() {
     c_width,
     c_height,
     f_data,
-    extra_info
-    // 500 //difference of nested y values : diff_step
+    extra_info,
+    5//difference of days for show
   );
   
   addBarChart(
     c_width,
     c_height,
     f_data,
+    "seasonal", 
     extra_info
   );
   
