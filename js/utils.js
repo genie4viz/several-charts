@@ -97,7 +97,7 @@ function getSkipDays(days, step) {
   }
   if (days.length - (1 % step) !== 0) {
     sel_days.push(days[days.length - 1]);
-  }  
+  }
   return sel_days;
 }
 function getDays(data) {
@@ -109,4 +109,19 @@ function getDays(data) {
 }
 function withComma(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+//detect media
+function detectMediaQuery() {
+  if (window.matchMedia("(max-width: 768px)").matches) {
+    //is mobile
+    console.log("mobile");
+  } else if (
+    window.matchMedia("(min-width: 768px) and (max-width: 991px)").matches
+  ) {
+    console.log("tablet");
+  } else if (window.matchMedia("(max-width: 1500px)").matches) {
+    console.log("desktop");
+  } else {
+    console.log("extra");
+  }
 }

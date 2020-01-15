@@ -1,8 +1,9 @@
 //draw functions
 
-function addLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
+function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   //gd: graph data, ei: extra_info
   //append title and legend
+  
   const margin = { left: 70, top: 10, right: 50, bottom: 30 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
@@ -14,9 +15,7 @@ function addLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   const legend_rows = 2,
     legend_cols = Math.round(gd.length / legend_rows);
 
-  d3.select("#line-chart-title").html(
-    `<strong style="font-size:16px">Turnover comparison 2018 vs 2019</strong>`
-  );
+  d3.select("#line-chart-title").html("Turnover comparison 2018 vs 2019");
 
   let legends = gd.map(d => ({ label: d.label, color: ei.color[d.value] }));
 
@@ -42,8 +41,6 @@ function addLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   legend_html_str += `</table>`;
   d3.select("#line-chart-legends").html(legend_html_str);
   d3.select("#line-chart-description").html("This is multi-line chart!");
-
-  svg.selectAll("*").remove();
 
   let days = gd[0].data.map(d => d.date),
     available_y_values = [];
@@ -156,7 +153,7 @@ function addLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
 }
 
-function addBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
+function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
   let bgd = gd.filter(d => d.value === duration_name)[0];
 
   const margin = { left: 70, top: 10, right: 50, bottom: 30 },
@@ -270,18 +267,18 @@ function addBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     );
 
   // Draw bars - total_in
-  console.log(r_bgd.data)
+  console.log(r_bgd.data);
   svgG
     .selectAll(".total_in-bars")
     .data(r_bgd.data)
     .enter()
-    .append("rect")    
+    .append("rect")
     .attr("fill", ei.color.total_in)
     .attr("x", d => x(d.date))
-    .attr("y", d => y(0) )
+    .attr("y", d => y(0))
     .attr("width", x.bandwidth())
     .attr("height", d => y(0) - 2);
-  
+
   // Draw bars - total_out
 
   // Draw the line
@@ -322,4 +319,4 @@ function addBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
 }
 
-function addDonutChart(width, height, v_data) {}
+function drawDonutChart(width, height, v_data) {}
