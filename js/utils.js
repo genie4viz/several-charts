@@ -1,60 +1,39 @@
-const formatTime = d3.timeFormat("%B %d, %Y");
+//data format functions
+function normalize(data) {
+  const all_days = getDays(data);
 
-function convertLineChartData(data) {
-  let c_data = [],
-    dates_arr = [],
-    totals_arr = [];
-
-  console.log(data, "origin data");
-  const u_data = data.calculation_basis_balances.items;
-
-  //get min, max date for range
-  for (let item in u_data) {
-    dates_arr.push(...u_data[item].items.dates);
-    totals_arr.push(...u_data[item].items.data.map(d => d.total));
+  let c_data = [];
+  for (let item in data) {
     c_data.push({
-      label: u_data[item].label,
-      data: u_data[item].items.data
+      data: data[item].items.data,
+      label: data[item].label,
+      value: item
     });
   }
 
-  const start_date = d3.min(dates_arr),
-    end_date = d3.max(dates_arr),
-    m_start_date = moment(start_date),
-    m_end_date = moment(end_date),
-    all_days = daysBetweenDates(m_start_date, m_end_date);
-
-  for (let i = 0; i < c_data.length; i++) {
-    const days = c_data[i].data.map(d => d.date);
+  for (let item in c_data) {
+    const days = c_data[item].data.map(d => d.date);
     for (let day of all_days) {
       if (!days.includes(day)) {
-        c_data[i].data.push({ date: day });
+        c_data[item].data.push({ date: day });
       }
     }
-    c_data[i].data.sort((a, b) => new Date(a.date) - new Date(b.date));
+    c_data[item].data.sort((a, b) => new Date(a.date) - new Date(b.date));
     //replace empty data as previous day's data
-    for (let k = 0; k < c_data[i].data.length; k++) {
-      if (!c_data[i].data[k].total) {
-        if (c_data[i].data[k - 1] && c_data[i].data[k - 1].total) {
-          c_data[i].data[k].total = c_data[i].data[k - 1].total;
+    for (let k = 0; k < c_data[item].data.length; k++) {
+      if (!c_data[item].data[k].total) {
+        if (c_data[item].data[k - 1] && c_data[item].data[k - 1].total) {
+          c_data[item].data[k].total = c_data[item].data[k - 1].total;
         } else {
-          c_data[i].data[k].total = 0;
+          c_data[item].data[k].total = 0;
         }
       }
     }
   }
-
-  return {
-    data: c_data,
-    days: all_days,
-    total_max: d3.max(totals_arr),
-    total_min: d3.min(totals_arr),
-    currency_prefix: data.calculation_basis_balances.currency_prefix || '',
-    main_bank_account_overdraft_limit: data.organisation_data.account.data.main_bank_account_overdraft_limit || 0
-  };
+  return c_data;
 }
-
-function daysBetweenDates(startDate, endDate) {
+//date relation functions
+function generateDays(startDate, endDate) {
   let now = startDate,
     dates = [];
 
@@ -64,62 +43,13 @@ function daysBetweenDates(startDate, endDate) {
   }
   return dates;
 }
-
+function getDays(data) {
+  let dates_arr = [];
+  for (let item in data) {
+    dates_arr.push(...data[item].items.dates);
+  }
+  return generateDays(moment(d3.min(dates_arr)), moment(d3.max(dates_arr)));
+}
 function withComma(x) {
   return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-function nFormatter(num, digits) {
-  var si = [
-    { value: 1, symbol: "" },
-    { value: 1e3, symbol: "k" },
-    { value: 1e6, symbol: "M" },
-    { value: 1e9, symbol: "G" },
-    { value: 1e12, symbol: "T" },
-    { value: 1e15, symbol: "P" },
-    { value: 1e18, symbol: "E" }
-  ];
-  var rx = /\.0+$|(\.[0-9]*[1-9])0+$/;
-  var i;
-  for (i = si.length - 1; i > 0; i--) {
-    if (num >= si[i].value) {
-      break;
-    }
-  }
-  return (num / si[i].value).toFixed(digits).replace(rx, "$1") + si[i].symbol;
-}
-function wrap(text, width) {
-  text.each(function() {
-    var text = d3.select(this),
-      words = text
-        .text()
-        .split(/\s+/)
-        .reverse(),
-      word,
-      line = [],
-      lineNumber = 0,
-      lineHeight = 1.1, // ems
-      y = text.attr("y"),
-      dy = parseFloat(text.attr("dy")) || 0,
-      tspan = text
-        .text(null)
-        .append("tspan")
-        .attr("x", 0)
-        .attr("y", y)
-        .attr("dy", dy + "em");
-    while ((word = words.pop())) {
-      line.push(word);
-      tspan.text(line.join(" "));
-      if (tspan.node().getComputedTextLength() > width) {
-        line.pop();
-        tspan.text(line.join(" "));
-        line = [word];
-        tspan = text
-          .append("tspan")
-          .attr("x", 0)
-          .attr("y", y)
-          .attr("dy", ++lineNumber * lineHeight + dy + "em")
-          .text(word);
-      }
-    }
-  });
 }

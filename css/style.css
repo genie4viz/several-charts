@@ -21,9 +21,11 @@ body {
 #line-chart-container {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 #line-chart-logo {
   display: flex;
+  width: 100%;
 }
 #line-chart-title {
   display: flex;
@@ -38,6 +40,11 @@ body {
 }
 #line-chart {
   display: flex;
+}
+#line-chart-description {
+  display: flex;
+  width: 80%;
+  padding: 8px;
 }
 
 .cell {
