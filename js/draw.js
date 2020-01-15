@@ -51,7 +51,16 @@ function addLineChart(cWidth, cHeight, gd, ei) {
     available_y_values.push(...item.data.map(d => d.total));
   });
 
-  console.log(available_y_values, "avai");
+  //replace data with diff day
+  
+  gd.forEach(d => {
+    d.data = replaceWithDay(d.data, 5, days);
+  });  
+
+  console.log(gd, "gggddd");
+
+  const y_max = d3.max(available_y_values),
+    y_min = d3.min(available_y_values);
 
   const svgG = svg
       .append("g")
@@ -62,7 +71,7 @@ function addLineChart(cWidth, cHeight, gd, ei) {
       .range([0, w]),
     y = d3
       .scaleLinear()
-      .domain([data.y_min, data.y_max])
+      .domain([y_min, y_max])
       .range([h, 0]),
     xAxis = svgG
       .append("g")
@@ -77,8 +86,8 @@ function addLineChart(cWidth, cHeight, gd, ei) {
     .selectAll(".tick")
     .select("text")
     .text(d => {
-      showableDays.push(formatYearMonthDay(d));
-      return formatMonthDay(d);
+      showableDays.push(formatYMD(d));
+      return formatMD(d);
     });
 
   xAxis
@@ -90,8 +99,8 @@ function addLineChart(cWidth, cHeight, gd, ei) {
   yAxis
     .selectAll(".tick")
     .select("line")
-    .attr("stroke", "white")
-    .attr("stroke-dasharray", "3, 3");
+    .attr("stroke", "white");
+
   yAxis
     .selectAll(".tick")
     .select("text")
@@ -100,18 +109,18 @@ function addLineChart(cWidth, cHeight, gd, ei) {
       d === 0
         ? d
         : d < 0
-        ? data.currency_prefix + "(" + withComma(Math.abs(d)) + ")"
-        : data.currency_prefix + withComma(d)
+        ? `${ei.currency_prefix}(${withComma(Math.abs(d))})`
+        : ei.currency_prefix + withComma(d)
     );
 
   // Draw the line
   svgG
     .selectAll(".line")
-    .data(data)
+    .data(gd)
     .enter()
     .append("path")
     .attr("fill", "none")
-    .attr("stroke", (_, i) => colors[i])
+    .attr("stroke", d => ei.color[d.value])
     .attr("stroke-width", 1.5)
     .attr("d", d =>
       d3
@@ -121,15 +130,15 @@ function addLineChart(cWidth, cHeight, gd, ei) {
     );
 
   //Draw the circles
-  data.forEach((dd, i) => {
+  gd.forEach(dd => {
     svgG
       .selectAll(".circle")
       .data(dd.data)
       .enter()
       .append("circle")
-      .attr("stroke", d => (d.total ? colors[i] : "transparent"))
-      .attr("stroke-width", d => (d.total ? 3 : 0))
-      .attr("fill", d => (d.total ? "white" : "transparent"))
+      .attr("stroke", ei.color[dd.value])
+      .attr("stroke-width", 3)
+      .attr("fill", "white")
       .attr("cx", d => x(new Date(d.date)))
       .attr("cy", d => y(d.total))
       .attr("r", 5);
@@ -138,18 +147,14 @@ function addLineChart(cWidth, cHeight, gd, ei) {
   //Draw main_bank_account_overdraft_limit line
   svgG
     .append("path")
-    .attr("stroke", "grey")
+    .attr("stroke", "orange")
     .attr("stroke-width", 1.5)
     .attr("stroke-dasharray", "3, 3")
-    .attr("d", `M0 ${y(data.main_bank_account_overdraft_limit)}h${w}z`);
+    .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
 }
 
-function addBarChart(cWidth, cHeight, data) {
+function addBarChart(cWidth, cHeight, gd, ei) {
   const margin = { left: 70, top: 10, right: 50, bottom: 30 },
-    color = {
-      total_in: "#5b9ed6",
-      total_out: "#283483"
-    },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
@@ -157,128 +162,130 @@ function addBarChart(cWidth, cHeight, data) {
       .append("svg")
       .style("width", cWidth)
       .style("height", cHeight);
-  const legend_rows = 3,
-    legend_cols = Math.round(data.length / legend_rows);
+  const legend_rows = 2,
+    legend_cols = Math.round(gd.length / legend_rows);
 
   d3.select("#bar-chart-title").html(
-    `<strong style="font-size:16px">Next 30 days - Predicted <br /> cash flow & cash balance </strong>`
+    `<strong style="font-size:16px">Turnover comparison 2018 vs 2019</strong>`
   );
-  let legend_str = `<table>`;
+
+  let legends = gd.map(d => ({ label: d.label, color: ei.color[d.value] }));
+
+  let legend_html_str = `<table>`;
   for (let i = 0; i < legend_cols; i++) {
-    legend_str += `<tr>`;
+    legend_html_str += `<tr>`;
     for (let j = 0; j < legend_rows; j++) {
-      legend_str += `<td>
+      legend_html_str += `<td>
       <div class="cell">${
-        data[i * legend_rows + j] ? data[i * legend_rows + j].label : ""
+        legends[i * legend_rows + j] ? legends[i * legend_rows + j].label : ""
       }${
-        data[i * legend_rows + j]
+        legends[i * legend_rows + j]
           ? `<svg
         width="20" height="20"
       ><circle cx="10" cy="10" r="5" stroke="${
-        colors[i * legend_rows + j]
+        legends[i * legend_rows + j].color
       }" stroke-width="3" fill="white"/></svg>`
           : ""
       }</div></td>`;
     }
-    legend_str += `</tr>`;
+    legend_html_str += `</tr>`;
   }
-  legend_str += `</table>`;
-  d3.select("#bar-chart-legends").html(legend_str);
-  d3.select("#bar-chart-description").html("This is multi-line chart!");
+  legend_html_str += `</table>`;
+  d3.select("#bar-chart-legends").html(legend_html_str);
+  d3.select("#bar-chart-description").html("This is bar & line chart!");
 
   svg.selectAll("*").remove();
 
-  // const svgG = svg
-  //     .append("g")
-  //     .attr("transform", `translate(${margin.left}, ${margin.top})`),
-  //   x = d3
-  //     .scaleTime()
-  //     .domain(d3.extent(data.days, d => new Date(d)))
-  //     .range([0, w]),
-  //   y = d3
-  //     .scaleLinear()
-  //     .domain([data.y_min, data.y_max])
-  //     .range([h, 0]),
-  //   xAxis = svgG
-  //     .append("g")
-  //     .attr("transform", `translate(0, ${h})`)
-  //     .call(d3.axisBottom(x)),
-  //   yAxis = svgG.append("g").call(d3.axisLeft(y).tickSize(-w));
+  let days = gd[0].data.map(d => d.date),
+    available_y_values = [];
+  gd.forEach(item => {
+    available_y_values.push(...item.data.map(d => d.total));
+  });
 
-  // xAxis.select(".domain").remove();
+  const y_max = d3.max(available_y_values),
+    y_min = d3.min(available_y_values);
 
-  // let showableDays = [];
-  // xAxis
-  //   .selectAll(".tick")
-  //   .select("text")
-  //   .text(d => {
-  //     showableDays.push(formatYearMonthDay(d));
-  //     return formatMonthDay(d);
-  //   });
+  const svgG = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`),
+    x = d3
+      .scaleTime()
+      .domain(d3.extent(days, d => new Date(d)))
+      .range([0, w]),
+    y = d3
+      .scaleLinear()
+      .domain([y_min, y_max])
+      .range([h, 0]),
+    xAxis = svgG
+      .append("g")
+      .attr("transform", `translate(0, ${h})`)
+      .call(d3.axisBottom(x)),
+    yAxis = svgG.append("g").call(d3.axisLeft(y).tickSize(-w));
 
-  // console.log(showableDays);
+  xAxis.select(".domain").remove();
 
-  // xAxis
-  //   .selectAll(".tick")
-  //   .select("line")
-  //   .attr("opacity", 0);
+  let showableDays = [];
+  xAxis
+    .selectAll(".tick")
+    .select("text")
+    .text(d => {
+      showableDays.push(formatYMD(d));
+      return formatMD(d);
+    });
 
-  // yAxis.select(".domain").remove();
-  // yAxis
-  //   .selectAll(".tick")
-  //   .select("line")
-  //   .attr("stroke", "white")
-  //   .attr("stroke-dasharray", "3, 3");
-  // yAxis
-  //   .selectAll(".tick")
-  //   .select("text")
-  //   .attr("dx", -5)
-  //   .text(d =>
-  //     d === 0
-  //       ? d
-  //       : d < 0
-  //       ? data.currency_prefix + "(-" + withComma(Math.abs(d)) + ")"
-  //       : data.currency_prefix + withComma(d)
-  //   );
+  xAxis
+    .selectAll(".tick")
+    .select("line")
+    .attr("opacity", 0);
 
-  // // Draw the line
-  // svgG
-  //   .selectAll(".line")
-  //   .data(data)
-  //   .enter()
-  //   .append("path")
-  //   .attr("fill", "none")
-  //   .attr("stroke", (_, i) => colors[i])
-  //   .attr("stroke-width", 1.5)
-  //   .attr("d", d =>
-  //     d3
-  //       .line()
-  //       .x(d => x(new Date(d.date)))
-  //       .y(d => y(d.total))(d.data)
-  //   );
+  yAxis.select(".domain").remove();
+  yAxis
+    .selectAll(".tick")
+    .select("line")
+    .attr("stroke", "white");
 
-  // //Draw the circles
-  // data.forEach((dd, i) => {
-  //   svgG
-  //     .selectAll(".circle")
-  //     .data(dd.data)
-  //     .enter()
-  //     .append("circle")
-  //     .attr("stroke", d => (d.total ? colors[i] : "transparent"))
-  //     .attr("stroke-width", d => (d.total ? 3 : 0))
-  //     .attr("fill", d => (d.total ? "white" : "transparent"))
-  //     .attr("cx", d => x(new Date(d.date)))
-  //     .attr("cy", d => y(d.total))
-  //     .attr("r", 5);
-  // });
+  yAxis
+    .selectAll(".tick")
+    .select("text")
+    .attr("dx", -5)
+    .text(d =>
+      d === 0
+        ? d
+        : d < 0
+        ? `${ei.currency_prefix}(${withComma(Math.abs(d))})`
+        : ei.currency_prefix + withComma(d)
+    );
 
-  // //Draw main_bank_account_overdraft_limit line
-  // svgG
-  //   .append("path")
-  //   .attr("stroke", "grey")
-  //   .attr("stroke-width", 1.5)
-  //   .attr("stroke-dasharray", "3, 3")
-  //   .attr("d", `M0 ${y(data.main_bank_account_overdraft_limit)}h${w}z`);
+  // Draw the line
+  svgG
+    .selectAll(".line")
+    .data(gd)
+    .enter()
+    .append("path")
+    .attr("fill", "none")
+    .attr("stroke", d => ei.color[d.value])
+    .attr("stroke-width", 1.5)
+    .attr("d", d =>
+      d3
+        .line()
+        .x(d => x(new Date(d.date)))
+        .y(d => y(d.total))(d.data)
+    );
+
+  //Draw the circles
+  gd.forEach(dd => {
+    svgG
+      .selectAll(".circle")
+      .data(dd.data)
+      .enter()
+      .append("circle")
+      .attr("stroke", ei.color[dd.value])
+      .attr("stroke-width", 3)
+      .attr("fill", "white")
+      .attr("cx", d => x(new Date(d.date)))
+      .attr("cy", d => y(d.total))
+      .attr("r", 5);
+  });
 }
 
 function addDonutChart(width, height, v_data) {}

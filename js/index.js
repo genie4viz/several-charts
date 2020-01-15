@@ -8,7 +8,7 @@ init();
 
 function init() {  
   
-  const f_data = normalize(data.calculation_basis_balances.items);
+  const f_data = normalizeData(data.calculation_basis_balances.items);
   console.log(f_data,' ppp')
   const extra_info = {
     currency_postfix: data.calculation_basis_balances.currency_postfix,
@@ -20,8 +20,10 @@ function init() {
       mostrecent: "#009873",
       avgseasonal: "#3a468d",
       avgoneyear: "#77adda",
-      mostrecentquarter: "#e68017"
-    }    
+      mostrecentquarter: "#e68017",
+      total_in: "#5b9ed6",
+      total_out: "#283483"
+    }
   }
   
   addLineChart(
@@ -29,15 +31,16 @@ function init() {
     c_height,
     f_data,
     extra_info
+    // 500 //difference of nested y values : diff_step
   );
-  // main_bank_account_overdraft_limit:
-  //     data.organisation_data.account.data.main_bank_account_overdraft_limit || 0
-  // addBarChart(
-  //   c_width,
-  //   c_height,
-  //   convertBarChartData(data, "seasonal")
-  // );
-  //   addBarChart();
+  
+  addBarChart(
+    c_width,
+    c_height,
+    f_data,
+    extra_info
+  );
+  
   //   addDonutChart();
 }
 

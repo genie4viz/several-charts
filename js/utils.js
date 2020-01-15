@@ -1,8 +1,9 @@
 //data format functions
-function normalize(data) {
+function normalizeData(data) {
   const all_days = getDays(data);
 
-  let c_data = [];
+  let c_data = [],
+    r_data = [];
   for (let item in data) {
     c_data.push({
       data: data[item].items.data,
@@ -19,20 +20,66 @@ function normalize(data) {
       }
     }
     c_data[item].data.sort((a, b) => new Date(a.date) - new Date(b.date));
-    //replace empty data as previous day's data
-    for (let k = 0; k < c_data[item].data.length; k++) {
-      if (!c_data[item].data[k].total) {
-        if (c_data[item].data[k - 1] && c_data[item].data[k - 1].total) {
-          c_data[item].data[k].total = c_data[item].data[k - 1].total;
-        } else {
-          c_data[item].data[k].total = 0;
-        }
-      }
-    }
+
+    c_data[item].data = replaceData(c_data[item].data, "total");
   }
   return c_data;
 }
+//replace empty data as previous day's data
+function replaceData(data, key_name) {
+  let r_data = [...data];
+  for (let i = 0; i < r_data.length; i++) {
+    if (!r_data[i][key_name]) {
+      if (r_data[i - 1] && r_data[i - 1][key_name]) {
+        r_data[i][key_name] = r_data[i - 1][key_name];
+      } else {
+        r_data[i][key_name] = 0;
+      }
+    }
+  }
+  return r_data;
+}
+
+//replace data with diff step
+function replaceWithDiff(data, key_name, diff_step) {
+  let replaced = [data[0]],
+    current = data[0][key_name];
+  for (let i = 1; i < data.length; i++) {
+    if (Math.abs(current - data[i][key_name]) >= diff_step) {
+      replaced.push(data[i]);
+      current = data[i][key_name];
+    } else {
+      // replaced.push({ ...data[i], [key_name]: current });
+    }
+  }
+  return replaced;
+}
+
+//replace data with day step
+function replaceWithDay(data, day_step, days) {
+  let replaced = [],
+    sel_days = [];
+
+  for (let i = 0; i < days.length; i += day_step) {
+    sel_days.push(days[i]);
+  }
+
+  if (days.length % day_step !== 0) {
+    sel_days.push(days[days.length - 1]);
+  }
+
+  for (let i = 0; i < data.length; i++) {
+    if (sel_days.includes(data[i].date)) {
+      replaced.push(data[i]);
+    }
+  }
+  return replaced;
+}
+
 //date relation functions
+const formatMD = d3.timeFormat("%b %d");
+const formatYMD = d3.timeFormat("%Y-%m-%d");
+
 function generateDays(startDate, endDate) {
   let now = startDate,
     dates = [];
