@@ -39,7 +39,8 @@ function init() {
     c_height,
     f_data,
     "seasonal", 
-    extra_info
+    extra_info,
+    8//difference of days for show
   );
   
   //   addDonutChart();

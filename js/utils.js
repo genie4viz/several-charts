@@ -21,52 +21,51 @@ function normalizeData(data) {
     }
     c_data[item].data.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-    c_data[item].data = replaceData(c_data[item].data, "total");
+    c_data[item].data = replaceData(c_data[item].data);
   }
   return c_data;
 }
 //replace empty data as previous day's data
-function replaceData(data, key_name) {
+
+function replaceData(data) {
   let r_data = [...data];
   for (let i = 0; i < r_data.length; i++) {
-    if (!r_data[i][key_name]) {
-      if (r_data[i - 1] && r_data[i - 1][key_name]) {
-        r_data[i][key_name] = r_data[i - 1][key_name];
+    if (!r_data[i].total) {
+      if (r_data[i - 1] && r_data[i - 1].total) {
+        r_data[i].total = r_data[i - 1].total;
       } else {
-        r_data[i][key_name] = 0;
+        r_data[i].total = 0;
       }
+    }
+    if (!r_data[i].total_in) {
+      r_data[i].total_in = 0;
+    }
+    if (!r_data[i].total_out) {
+      r_data[i].total_out = 0;
     }
   }
   return r_data;
 }
 
 //replace data with diff step
-function replaceWithDiff(data, key_name, diff_step) {
-  let replaced = [data[0]],
-    current = data[0][key_name];
-  for (let i = 1; i < data.length; i++) {
-    if (Math.abs(current - data[i][key_name]) >= diff_step) {
-      replaced.push(data[i]);
-      current = data[i][key_name];
-    } else {
-      // replaced.push({ ...data[i], [key_name]: current });
-    }
-  }
-  return replaced;
-}
+// function replaceWithDiff(data, key_name, diff_step) {
+//   let replaced = [data[0]],
+//     current = data[0][key_name];
+//   for (let i = 1; i < data.length; i++) {
+//     if (Math.abs(current - data[i][key_name]) >= diff_step) {
+//       replaced.push(data[i]);
+//       current = data[i][key_name];
+//     } else {
+//       // replaced.push({ ...data[i], [key_name]: current });
+//     }
+//   }
+//   return replaced;
+// }
 
 //replace data with day step
 function replaceWithDay(data, day_step, days) {
   let replaced = [],
-    sel_days = [];
-
-  for (let i = 0; i < days.length; i += day_step) {
-    sel_days.push(days[i]);
-  }
-
-  if (days.length % day_step !== 0) {
-    sel_days.push(days[days.length - 1]);
-  }
+    sel_days = getSkipDays(days, day_step);
 
   for (let i = 0; i < data.length; i++) {
     if (sel_days.includes(data[i].date)) {
@@ -89,6 +88,17 @@ function generateDays(startDate, endDate) {
     now.add(1, "days");
   }
   return dates;
+}
+function getSkipDays(days, step) {
+  let sel_days = [];
+
+  for (let i = 0; i < days.length; i += step) {
+    sel_days.push(days[i]);
+  }
+  if (days.length - (1 % step) !== 0) {
+    sel_days.push(days[days.length - 1]);
+  }  
+  return sel_days;
 }
 function getDays(data) {
   let dates_arr = [];
