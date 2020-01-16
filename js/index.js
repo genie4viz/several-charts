@@ -1,8 +1,9 @@
 // set the dimensions and margins of the graph
+const sample_text = "Lem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to amke a type specimen.";
 let containerWidth = parseFloat(
-    d3.select("#line-chart-container").style("width")
+    d3.select(".chart").style("width")
   ),
-  containerHeight = 400;
+  containerHeight = 600;
 
 init();
 
@@ -24,12 +25,18 @@ function init() {
       }
     },
     f_data = normalizeData(data.calculation_basis_balances.items);
-    
+
   drawLineChart(
     containerWidth,
     containerHeight,
     f_data,
-    extra_info,
-    5 //difference of days for show
+    extra_info    
+  );
+  drawBarChart(
+    containerWidth,
+    containerHeight,
+    f_data,
+    "avgseasonal",
+    extra_info    
   );
 }

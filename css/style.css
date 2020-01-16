@@ -1,106 +1,22 @@
 body {
-  font-family: "Sans serif";
+  font-family: "Abel";
   font-size: 12px;
   background-color: #eaecf0;
 }
 
+text {
+  font-family: "Abel";
+  font-weight: bold;
+}
 #charts-container {
   display: flex;
   justify-content: center;  
   align-items: center;
   flex-direction: column;
-  width: 100%;
+  width: calc(100% - 16px);
   height: 100%;
 }
 
-.chart {
-  margin: 2rem;
-  width: 100%;
-  border: 1px solid green;
-}
-
-/* styles for line chart */
-
-#line-chart-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-#line-chart-logo {
-  display: flex;
-  width: 100%;
-}
-#line-chart-title {
-  display: flex;
-  width: 50%;
-  justify-content: center;
-  align-items: center;
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
-}
-#line-chart-legends {
-  display: flex;
-  width: 50%;
-  flex-direction: column;
-}
-#line-chart {
-  display: flex;
-}
-#line-chart-description {
-  display: flex;
-  width: 80%;
-  padding: 8px;
-}
-
-/* styles for bar & line chart */
-
-#bar-chart-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-#bar-chart-logo {
-  display: flex;
-  width: 100%;
-}
-#bar-chart-title {
-  display: flex;
-  width: 50%;
-  text-align: center;
-  justify-content: center;
-  align-items: center;
-}
-#bar-chart-legends {
-  display: flex;
-  width: 50%;
-  flex-direction: column;
-}
-#bar-chart {
-  display: flex;
-}
-#bar-chart-description {
-  display: flex;
-  width: 80%;
-  padding: 8px;
-}
-
-/* styles for donut chart */
-
-.cell1 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.cell2 {
-  display: flex;
-  align-items: center;  
-  padding: 0 12px;
-}
-.spacing {
-  margin: 0 8px;
-}
-table {
-  width: 100%;
+.chart {  
+  width: 100%;  
 }
