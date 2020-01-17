@@ -3,7 +3,7 @@
 function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   //gd: graph data, ei: extra_info
 
-  const margin = { left: 70, top: 80, right: 50, bottom: 120 },
+  const margin = { left: 70, top: 80, right: 50, bottom: 164 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
@@ -33,7 +33,7 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
         .text(dd.label);
       legend_g
         .append("circle")
-        .attr("cx", w / 2 + 100)
+        .attr("cx", w / 2 + 120)
         .attr("cy", (i + 1) * 20)
         .attr("r", 5)
         .attr("fill", "white")
@@ -42,13 +42,13 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     } else {
       legend_g
         .append("text")
-        .attr("x", w / 2 + 140)
+        .attr("x", w / 2 + 200)
         .attr("y", (i - 2) * 20)
         .attr("alignment-baseline", "central")
         .text(dd.label);
       legend_g
         .append("circle")
-        .attr("cx", w / 2 + 240)
+        .attr("cx", w / 2 + 320)
         .attr("cy", (i - 2) * 20)
         .attr("r", 5)
         .attr("fill", "white")
@@ -96,13 +96,12 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
 
   xAxis.select(".domain").remove();
 
+  //show skipped days
+  const skippedDays = getSkipDays(days, 5);
   xAxis
     .selectAll(".tick")
     .select("text")
-    .attr("text-anchor", "end")
-    .attr("dx", -10)
-    .attr("transform", "rotate(-45)")
-    .text(d => d);
+    .text(d => (skippedDays.includes(d) ? moment(d).format("MMM DD") : ""));
 
   xAxis
     .selectAll(".tick")
@@ -128,6 +127,41 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .attr("dx", -5)
     .text(d => (d < 0 ? `(${withComma(Math.abs(d))})` : withComma(d)));
 
+  //tooltip
+  const tooltipG = svgG.append("g").attr("class", "tool-tip");
+  //indicator line
+  const indicator = svgG
+    .append("path")
+    .attr("class", "indicator")
+    .attr("stroke", "grey")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "3, 3");
+
+  //Append invisible rect for bisect data
+  svgG
+    .append("rect")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("fill", "transparent") //will transparent
+    .on("mousemove", function() {
+      let date = scaleBandInvert(x)(d3.mouse(this)[0]);
+
+      svg.selectAll("circle").each(function() {        
+        if(d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2){
+          d3.select(this).attr("r", 8)
+        }else {
+          d3.select(this).attr("r", 5)
+        }
+      })
+
+      indicator.attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
+      let accInfo = getInfoFromDate(gd, date);
+
+      tooltipG
+        .attr("transform", `translate(${x(date)}, ${h + 40})`)
+        .call(callout, x, w, date, accInfo, ["date", "total", "total_in", "total_out"], ei);
+    })
+
   // Draw the line
   svgG
     .selectAll(".line")
@@ -145,7 +179,6 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     );
 
   //Draw the circles
-  const tag_descG = svgG.append("g").attr("class", "point-description");
   r_gd.forEach(dd => {
     svgG
       .selectAll(".circle")
@@ -157,35 +190,7 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
       .attr("fill", "white")
       .attr("cx", d => x(d.date) + x.bandwidth() / 2)
       .attr("cy", d => y(d.total))
-      .attr("r", 5)
-      .on("mouseover", function(d) {
-        d3.select(this).attr("r", 8);
-        d3.select(this).raise();
-        svgG
-          .append("path")
-          .attr("class", "indicator")
-          .attr("stroke", ei.color[dd.value])
-          .attr("stroke-width", 1)
-          .attr("stroke-dasharray", "3, 3")
-          .attr("d", `M${x(d.date) + x.bandwidth() / 2} 0v${h + 60}`);
-        tag_descG
-          .attr("transform", `translate(${x(d.date)}, ${h + 60})`)
-          .call(
-            callout,
-            x,
-            w,
-            d,
-            dd.label,
-            ["date", "total"],
-            ei.color[dd.value]
-          );
-      })
-      .on("mouseleave", function(d) {
-        d3.select(this).attr("r", 5);
-        // d3.select(this).lower();
-        tag_descG.call(callout, x, w, null, null, [], "white");
-        svgG.select(".indicator").remove();
-      });
+      .attr("r", 5);
   });
 
   //Draw main_bank_account_overdraft_limit line
@@ -200,7 +205,7 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
 function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
   let bgd = gd.filter(d => d.value === duration_name)[0];
 
-  const margin = { left: 70, top: 90, right: 50, bottom: 160 },
+  const margin = { left: 70, top: 90, right: 50, bottom: 170 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
@@ -227,7 +232,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
   //add legends
   legend_g
     .append("rect")
-    .attr("x", w / 2 - 20)
+    .attr("x", w / 2 - 30)
     .attr("y", 28)
     .attr("width", 15)
     .attr("height", 15)
@@ -239,7 +244,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .text("Total In");
   legend_g
     .append("rect")
-    .attr("x", w / 2 - 20)
+    .attr("x", w / 2 - 30)
     .attr("y", 48)
     .attr("width", 15)
     .attr("height", 15)
@@ -251,7 +256,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .text("Total Out");
   legend_g
     .append("circle")
-    .attr("cx", w / 2 + 90)
+    .attr("cx", w / 2 + 120)
     .attr("cy", 35)
     .attr("r", 5)
     .attr("fill", "white")
@@ -259,7 +264,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .attr("stroke-width", 3);
   legend_g
     .append("text")
-    .attr("x", w / 2 + 100)
+    .attr("x", w / 2 + 135)
     .attr("y", 40)
     .text(bgd.label);
 
@@ -278,6 +283,8 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
       data: replaceWithDay(bgd.data, diff_day, days)
     };
 
+  //show skipped days
+  const skippedDays = getSkipDays(days, 5);
   const svgG = svg
       .append("g")
       .attr("transform", `translate(${margin.left}, ${margin.top})`),
@@ -301,10 +308,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
   xAxis
     .selectAll(".tick")
     .select("text")
-    .attr("text-anchor", "end")
-    .attr("dx", -10)
-    .attr("transform", "rotate(-45)")
-    .text(d => d);
+    .text(d => (skippedDays.includes(d) ? moment(d).format("MMM DD") : ""));
 
   xAxis
     .selectAll(".tick")
@@ -369,8 +373,42 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
         .y(d => y(d.total))(d.data)
     );
 
-  //Draw the circles
-  const tag_descG = svgG.append("g").attr("class", "point-description");
+  //tooltip
+  const tooltipG = svgG.append("g").attr("class", "tool-tip");
+  //indicator line
+  const indicator = svgG
+    .append("path")
+    .attr("class", "indicator")
+    .attr("stroke", "grey")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "3, 3");
+
+  //Append invisible rect for bisect data
+  svgG
+    .append("rect")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("fill", "transparent")
+    .on("mousemove", function() {
+      
+      let date = scaleBandInvert(x)(d3.mouse(this)[0]);
+      indicator.attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
+
+      svg.selectAll("circle").each(function() {        
+        if(d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2){
+          d3.select(this).attr("r", 8)
+        }else {
+          d3.select(this).attr("r", 5)
+        }
+      })
+
+      let accInfo = getInfoFromDate([r_bgd], date);
+      tooltipG
+        .attr("transform", `translate(${x(date)}, ${h + 40})`)
+        .call(callout, x, w, date, accInfo, ["date", "total", "total_in", "total_out"], ei);
+    })
+
+  //Draw the circles  
   svgG
     .selectAll(".circle")
     .data(r_bgd.data)
@@ -381,35 +419,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .attr("fill", "white")
     .attr("cx", d => x(d.date) + x.bandwidth() / 2)
     .attr("cy", d => y(d.total))
-    .attr("r", 5)
-    .on("mouseover", function(d) {
-      d3.select(this).attr("r", 8);
-      d3.select(this).raise();
-      svgG
-        .append("path")
-        .attr("class", "indicator")
-        .attr("stroke", ei.color[r_bgd.value])
-        .attr("stroke-width", 1)
-        .attr("stroke-dasharray", "3, 3")
-        .attr("d", `M${x(d.date) + x.bandwidth() / 2} 0v${h + 60}`);
-      tag_descG
-        .attr("transform", `translate(${x(d.date)}, ${h + 60})`)
-        .call(
-          callout,
-          x,
-          w,
-          d,
-          r_bgd.label,
-          ["date", "total", "total_in", "total_out"],
-          ei.color[r_bgd.value]
-        );
-    })
-    .on("mouseleave", function(d) {
-      d3.select(this).attr("r", 5);
-      // d3.select(this).lower();
-      tag_descG.call(callout, x, w, null, null, [], "white");
-      svgG.select(".indicator").remove();
-    });
+    .attr("r", 5);
 
   //Draw main_bank_account_overdraft_limit line
   svgG
@@ -419,45 +429,74 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .attr("stroke-dasharray", "3, 3")
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
 }
-
-function drawDonutChart(width, height, v_data) {}
-
-function callout(g, x, w, d, duration, fields, color) {
-  if (!d) return g.style("display", "none");
+function callout(
+  g,
+  x = null,
+  w = 0,
+  date = "",
+  info = null,
+  fields = [],
+  ei = {}
+) {
+  if (!info) return g.style("display", "none");
 
   g.style("display", null).style("pointer-events", "none");
 
   g.selectAll("*").remove();
 
+  const info_len = Object.keys(info).length,
+    each_info_width = 160;
+
   g.append("rect")
-    .attr("x", x(d.date) <= w / 2 ? 5 : -185)
-    // .attr("y", 10)
-    .attr("width", 200)
-    .attr("height", (fields.length + 1) * 17)
-    .attr("stroke", color)
+    .attr("x", x(date) <= w / 2 ? 0 : -info_len * each_info_width + 15)
+    .attr("width", info_len * each_info_width)
+    .attr("height", (fields.length + 1) * 24)
+    .attr("stroke", ei.color.desc_body)
     .attr("stroke-width", 1)
     .attr("fill", "#eaecf0");
   g.append("rect")
-    .attr("x", x(d.date) <= w/2 ? 5 : -185)
-    // .attr("y", 10)
-    .attr("width", 10)
-    .attr("height", (fields.length + 1) * 17)
-    .attr("fill", color);
-  // g.append("path")
-  //   .attr("stroke", color)
-  //   .attr("stroke-width", 1)
-  //   .attr("fill", x(d.date) <= w/2 ? color : "#eaecf0")
-  //   .attr("d", `M0 15l-7.5 10h15z`)
-  g.append("text")
-    .attr("x", x(d.date) <= w / 2 ? 40 : -160)
-    .attr("y", 15)
-    .attr("font-size", 14)
-    .text(duration);
-  for (let i = 0; i < fields.length; i++) {
+    .attr("x", x(date) <= w / 2 ? 0 : -info_len * each_info_width + 15)
+    .attr("width", 20)
+    .attr("stroke", ei.color.desc_head)
+    .attr("stroke-width", 1)
+    .attr("height", (fields.length + 1) * 24)
+    .attr("fill", ei.color.desc_head);
+
+  let x_step = 0,
+    x_start = 40;
+
+  for (let item in info) {
     g.append("text")
-      .attr("x", x(d.date) <= w / 2 ? 40 : -160)
-      .attr("y", 30 + i * 15)
-      .attr("font-size", 12)
-      .text(fields[i] + ": " + d[fields[i]]);
+      .attr(
+        "x",
+        x(date) <= w / 2
+          ? x_start + x_step
+          : -info_len * each_info_width + x_start + x_step
+      )
+      .attr("y", 25)
+      .attr("font-size", 16)
+      .text(info[item].label);
+    for (let i = 0; i < fields.length; i++) {
+      g.append("text")
+        .attr(
+          "x",
+          x(date) <= w / 2
+            ? x_start + x_step
+            : -info_len * each_info_width + x_start + x_step
+        )
+        .attr("y", 25 + (i + 1) * 20)
+        .attr("font-size", 12)
+        .text(fields[i] + ": " + info[item][fields[i]]);
+    }
+    x_step += each_info_width;
   }
+}
+function scaleBandInvert(scale) {
+  let domain = scale.domain();
+  let paddingOuter = scale(domain[0]);
+  let eachBand = scale.step();
+  return function(value) {
+    let index = Math.floor((value - paddingOuter) / eachBand);
+    return domain[Math.max(0, Math.min(index, domain.length - 1))];
+  };
 }

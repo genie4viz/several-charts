@@ -21,7 +21,9 @@ function init() {
         avgoneyear: "#77adda",
         mostrecentquarter: "#e68017",
         total_in: "#5b9ed6",
-        total_out: "#283483"
+        total_out: "#283483",
+        desc_head: "#1f265c",
+        desc_body: "#a2c2e7"
       }
     },
     f_data = normalizeData(data.calculation_basis_balances.items);
@@ -36,7 +38,7 @@ function init() {
     containerWidth,
     containerHeight,
     f_data,
-    "avgseasonal",
+    "avgoneyear",
     extra_info    
   );
 }

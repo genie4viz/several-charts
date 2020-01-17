@@ -45,7 +45,15 @@ function replaceData(data) {
   }
   return r_data;
 }
-
+//get info from any date 
+function getInfoFromDate(data, strDate) {
+  let info = {};  
+  for(let item of data) {
+    info[item.value] = item.data.filter(d => d.date === strDate)[0]
+    info[item.value]["label"] = item.label
+  }  
+  return info  
+}
 //replace data with diff step
 // function replaceWithDiff(data, key_name, diff_step) {
 //   let replaced = [data[0]],
@@ -75,9 +83,6 @@ function replaceWithDay(data, day_step, days) {
 }
 
 //date relation functions
-const formatMD = d3.timeFormat("%b %d");
-const formatYMD = d3.timeFormat("%Y-%m-%d");
-
 function generateDays(startDate, endDate) {
   let now = startDate,
     dates = [];
