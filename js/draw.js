@@ -146,21 +146,29 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .on("mousemove", function() {
       let date = scaleBandInvert(x)(d3.mouse(this)[0]);
 
-      svg.selectAll("circle").each(function() {        
-        if(d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2){
-          d3.select(this).attr("r", 8)
-        }else {
-          d3.select(this).attr("r", 5)
+      svg.selectAll("circle").each(function() {
+        if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
+          d3.select(this).attr("r", 8);
+        } else {
+          d3.select(this).attr("r", 5);
         }
-      })
+      });
 
       indicator.attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
       let accInfo = getInfoFromDate(gd, date);
 
       tooltipG
         .attr("transform", `translate(${x(date)}, ${h + 40})`)
-        .call(callout, x, w, date, accInfo, ["date", "total", "total_in", "total_out"], ei);
-    })
+        .call(
+          callout,
+          x,
+          w,
+          date,
+          accInfo,
+          ["date", "total", "total_in", "total_out"],
+          ei
+        );
+    });
 
   // Draw the line
   svgG
@@ -390,25 +398,32 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .attr("height", h)
     .attr("fill", "transparent")
     .on("mousemove", function() {
-      
       let date = scaleBandInvert(x)(d3.mouse(this)[0]);
       indicator.attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
 
-      svg.selectAll("circle").each(function() {        
-        if(d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2){
-          d3.select(this).attr("r", 8)
-        }else {
-          d3.select(this).attr("r", 5)
+      svg.selectAll("circle").each(function() {
+        if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
+          d3.select(this).attr("r", 8);
+        } else {
+          d3.select(this).attr("r", 5);
         }
-      })
+      });
 
       let accInfo = getInfoFromDate([r_bgd], date);
       tooltipG
         .attr("transform", `translate(${x(date)}, ${h + 40})`)
-        .call(callout, x, w, date, accInfo, ["date", "total", "total_in", "total_out"], ei);
-    })
+        .call(
+          callout,
+          x,
+          w,
+          date,
+          accInfo,
+          ["date", "total", "total_in", "total_out"],
+          ei
+        );
+    });
 
-  //Draw the circles  
+  //Draw the circles
   svgG
     .selectAll(".circle")
     .data(r_bgd.data)
@@ -486,11 +501,18 @@ function callout(
         )
         .attr("y", 25 + (i + 1) * 20)
         .attr("font-size", 12)
-        .text(fields[i] + ": " + info[item][fields[i]]);
+        .text(
+          i === 0
+            ? fields[i] +
+                ":" +
+                moment(info[item][fields[i]]).format("DD-MM-YYYY")
+            : fields[i] + ":" + withComma(Math.round(info[item][fields[i]]))
+        );
     }
     x_step += each_info_width;
   }
 }
+
 function scaleBandInvert(scale) {
   let domain = scale.domain();
   let paddingOuter = scale(domain[0]);
