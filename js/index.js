@@ -3,7 +3,7 @@ const sample_text = "Lem Ipsum is simply dummy text of the printing and typesett
 let containerWidth = parseFloat(
     d3.select(".chart").style("width")
   ),
-  containerHeight = 600;
+  containerHeight = 800;
 
 init();
 

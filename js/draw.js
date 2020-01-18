@@ -3,7 +3,7 @@
 function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   //gd: graph data, ei: extra_info
 
-  const margin = { left: 70, top: 80, right: 50, bottom: 164 },
+  const margin = { left: 70, top: 25, right: 50, bottom: 164 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
@@ -12,50 +12,36 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
       .style("width", cWidth)
       .style("height", cHeight);
 
-  //legend
-  const legend_g = svg.append("g");
-  //add title
-  legend_g
-    .append("text")
-    .attr("x", w / 4)
-    .attr("y", 40)
-    .attr("text-anchor", "middle")
-    .attr("font-size", 18)
-    .text("Turnover comparison 2018 vs 2019");
-  //add legends
-  gd.forEach((dd, i) => {
-    if (i < 3) {
-      legend_g
-        .append("text")
-        .attr("x", w / 2)
-        .attr("y", (i + 1) * 20)
-        .attr("alignment-baseline", "central")
-        .text(dd.label);
-      legend_g
-        .append("circle")
-        .attr("cx", w / 2 + 120)
-        .attr("cy", (i + 1) * 20)
-        .attr("r", 5)
-        .attr("fill", "white")
-        .attr("stroke", ei.color[dd.value])
-        .attr("stroke-width", 3);
-    } else {
-      legend_g
-        .append("text")
-        .attr("x", w / 2 + 200)
-        .attr("y", (i - 2) * 20)
-        .attr("alignment-baseline", "central")
-        .text(dd.label);
-      legend_g
-        .append("circle")
-        .attr("cx", w / 2 + 320)
-        .attr("cy", (i - 2) * 20)
-        .attr("r", 5)
-        .attr("fill", "white")
-        .attr("stroke", ei.color[dd.value])
-        .attr("stroke-width", 3);
+  const legend_rows = 2,
+    legend_cols = Math.round(gd.length / legend_rows);
+
+  d3.select("#line-chart-title").html(
+    `<strong style="font-size:16px">Turnover comparison 2018 vs 2019</strong>`
+  );
+
+  let legends = gd.map(d => ({ label: d.label, color: ei.color[d.value] }));
+
+  let legend_html_str = `<table>`;
+  for (let i = 0; i < legend_cols; i++) {
+    legend_html_str += `<tr>`;
+    for (let j = 0; j < legend_rows; j++) {
+      legend_html_str += `<td>
+      <div class="cell1">${
+        legends[i * legend_rows + j]
+          ? `<svg
+        width="20" height="20"
+      ><circle cx="10" cy="10" r="5" stroke="${
+        legends[i * legend_rows + j].color
+      }" stroke-width="3" fill="white"/></svg>`
+          : ""
+      }${
+        legends[i * legend_rows + j] ? legends[i * legend_rows + j].label : ""
+      }</div></td>`;
     }
-  });
+    legend_html_str += `</tr>`;
+  }
+  legend_html_str += `</table>`;
+  d3.select("#line-chart-legends").html(legend_html_str);
 
   let days = gd[0].data.map(d => d.date),
     available_y_values = [];
