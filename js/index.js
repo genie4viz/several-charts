@@ -25,7 +25,8 @@ function init() {
         desc_body: "#a2c2e7"
       }
     },
-    f_data = normalizeData(data.calculation_basis_balances.items);
+    f_data = normalizeData(data.calculation_basis_balances.items),
+    donut_data = 
 
   drawLineChart(containerWidth, containerHeight, f_data, extra_info);
   drawBarChart(
@@ -35,7 +36,12 @@ function init() {
     "avgoneyear",
     extra_info
   );
-  drawDonutChart(f_data, extra_info);
+  drawDonutChart(data.contacts);
 }
 
+//events
+// window.addEventListener("resize", onResize);
 
+// function onResize() {
+//   drawDonutChart(f_data, extra_info);
+// }

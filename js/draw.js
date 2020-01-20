@@ -442,11 +442,11 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
         .html(strInner)
         .style("left", () => {
           tooltip_width = parseFloat(d3.select("#bar-tooltip").style("width"));
-          if (d3.event.pageX < container_width / 2) {            
+          if (d3.event.pageX < container_width / 2) {
             return (
               x(date) + x.bandwidth() / 2 + margin.left - scroll_pos + "px"
             );
-          } else {            
+          } else {
             return (
               x(date) +
               x.bandwidth() / 2 +
@@ -466,23 +466,87 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
       svg.selectAll("circle").attr("r", 5);
     });
 }
-function drawDonutChart(gd, ei) {
-  console.log(d3.select("#donut-chart").style("width"), 'with')
-  // const margin = 40,
-  //   w = h = cWidth - margin * 2,    
-  //   svg = d3
-  //     .select("#donut-chart")
-  //     .append("svg")
-  //     .style("width", cWidth)
-  //     .style("height", cHeight);
-  
+function drawDonutChart(gd) {
+  console.log(gd, "docunet");
+  const colors = d3
+    .scaleSequential()
+    .domain([1, gd.length])
+    .interpolator(d3.interpolateViridis);
+
+  const margin = 40,
+    cWidth = 450,
+    svg = d3
+      .select("#donut-chart")
+      .append("svg")
+      .style("width", cWidth)
+      .style("height", cWidth);
+
+  svg.selectAll("*").remove();
   //add legends
+  const rows = 4,
+    cols = Math.round(gd.length / rows);
   let legend_html_str = `<table>`;
-  gd.forEach(each => {
-    legend_html_str += `<tr><td><div class='cell1'>
-    <svg width="15" height="15"><rect width="15" height="15" fill="${ei.color[each.value]}"/></svg>&nbsp;${each.label}
-      </div></td></tr>`;
-  })
-  legend_html_str += `</table>`; 
+  for (let i = 0; i < cols; i++) {
+    legend_html_str += `<tr>`;
+    for (let j = 0; j < rows; j++) {
+      legend_html_str += `<td>
+          <div class='cell1'>
+            <svg width="15" height="15"><rect width="15" height="15" fill="${colors(
+              i * rows + j
+            )}"/>
+            </svg>&nbsp;${gd[i * rows + j].contact.name}
+          </div>
+        </td>`;
+    }
+    legend_html_str += `</tr>`;
+  }
+  legend_html_str += `</table>`;
   document.getElementById("donut-chart-legends").innerHTML = legend_html_str;
+
+  const radius = (cWidth - margin) / 2;
+  const svgG = svg
+    .append("g")
+    .attr("transform", `translate(${cWidth / 2}, ${cWidth / 2})`);
+
+  const pie = d3.pie().value(d => Math.abs(parseFloat(d.contact.known_total)));
+  const data_ready = pie(gd);
+
+  //append description text in center of chart
+  const descNameTxt = svgG
+    .append("text")
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "middle")
+    .text("");
+  const descValueTxt = svgG
+    .append("text")
+    .attr("y", 18)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "middle")
+    .text("");
+  svgG
+    .selectAll("pie")
+    .data(data_ready)
+    .enter()
+    .append("path")
+    .attr(
+      "d",
+      d3
+        .arc()
+        .innerRadius(radius * 0.4) // This is the size of the donut hole
+        .outerRadius(radius)
+    )
+    .attr("fill", (_, i) => colors(i))
+    .attr("stroke", "white")
+    .style("stroke-width", 1)
+    .style("opacity", 0.6)
+    .on("mouseover", function(d) {
+      d3.select(this).style("opacity", 1);
+      descNameTxt.text(d.data.contact.name);
+      descValueTxt.text(
+        withComma(Math.abs(parseFloat(d.data.contact.known_total)))
+      );
+    })
+    .on("mouseout", function() {
+      d3.select(this).style("opacity", 0.6);
+    });
 }
