@@ -3,7 +3,7 @@
 function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   //gd: graph data, ei: extra_info
 
-  const margin = { left: 70, top: 25, right: 50, bottom: 164 },
+  const margin = { left: 70, top: 25, right: 50, bottom: 170 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
@@ -15,9 +15,7 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   const legend_rows = 2,
     legend_cols = Math.round(gd.length / legend_rows);
 
-  d3.select("#line-chart-title").html(
-    `<strong style="font-size:16px">Turnover comparison 2018 vs 2019</strong>`
-  );
+  d3.select("#line-chart-title").html(`Forecast spread 2018 vs 2019`);
 
   let legends = gd.map(d => ({ label: d.label, color: ei.color[d.value] }));
 
@@ -42,6 +40,13 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
   }
   legend_html_str += `</table>`;
   d3.select("#line-chart-legends").html(legend_html_str);
+
+  const tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("id", "line-tooltip")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
 
   let days = gd[0].data.map(d => d.date),
     available_y_values = [];
@@ -113,8 +118,6 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .attr("dx", -5)
     .text(d => (d < 0 ? `(${withComma(Math.abs(d))})` : withComma(d)));
 
-  //tooltip
-  const tooltipG = svgG.append("g").attr("class", "tool-tip");
   //indicator line
   const indicator = svgG
     .append("path")
@@ -122,39 +125,6 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .attr("stroke", "grey")
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "3, 3");
-
-  //Append invisible rect for bisect data
-  svgG
-    .append("rect")
-    .attr("width", w)
-    .attr("height", h)
-    .attr("fill", "transparent") //will transparent
-    .on("mousemove", function() {
-      let date = scaleBandInvert(x)(d3.mouse(this)[0]);
-
-      svg.selectAll("circle").each(function() {
-        if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
-          d3.select(this).attr("r", 8);
-        } else {
-          d3.select(this).attr("r", 5);
-        }
-      });
-
-      indicator.attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
-      let accInfo = getInfoFromDate(gd, date);
-
-      tooltipG
-        .attr("transform", `translate(${x(date)}, ${h + 40})`)
-        .call(
-          callout,
-          x,
-          w,
-          date,
-          accInfo,
-          ["date", "total", "total_in", "total_out"],
-          ei
-        );
-    });
 
   // Draw the line
   svgG
@@ -194,12 +164,70 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .attr("stroke-width", 1.5)
     .attr("stroke-dasharray", "3, 3")
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
-}
 
+  //Append invisible rect for bisect data
+  svgG
+    .append("rect")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("fill", "transparent") //will transparent
+    .on("mousemove", function() {
+      let date = scaleBandInvert(x)(d3.mouse(this)[0]);
+
+      svg.selectAll("circle").each(function() {
+        if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
+          d3.select(this).attr("r", 8);
+        } else {
+          d3.select(this).attr("r", 5);
+        }
+      });
+
+      indicator
+        .style("opacity", 1)
+        .attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
+      let strInner = getLineChartDataFromDate(gd, date); // return htmlStr
+      let offsetTop = document.getElementById("line-chart-container").offsetTop,
+        container_width = parseFloat(d3.select(".chart").style("width")),
+        tooltip_width = parseFloat(d3.select("#line-tooltip").style("width")),
+        scroll_pos = document.getElementById("line-chart").scrollLeft,
+        logo_height = parseFloat(d3.select("#line-chart-logo").style("height"));
+
+      tooltip
+        .style("opacity", 1)
+        .html(strInner)
+        .style("left", () => {
+          tooltip_width = parseFloat(d3.select("#line-tooltip").style("width"));
+          if (container_width <= 512) {
+            return 10 + "px";
+          }
+          if (d3.event.pageX < container_width / 2) {
+            return (
+              x(date) + x.bandwidth() / 2 + margin.left - scroll_pos + "px"
+            );
+          } else {
+            return (
+              x(date) +
+              x.bandwidth() / 2 +
+              margin.left -
+              scroll_pos -
+              tooltip_width +
+              "px"
+            );
+          }
+        })
+        .style("top", offsetTop + margin.top + h + 30 + logo_height + "px")
+        .style("opacity", 0.9);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      indicator.style("opacity", 0);
+      svg.selectAll("circle").attr("r", 5);
+    });
+}
 function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
   let bgd = gd.filter(d => d.value === duration_name)[0];
 
-  const margin = { left: 70, top: 90, right: 50, bottom: 170 },
+  const margin = { left: 70, top: 25, right: 50, bottom: 160 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
@@ -208,59 +236,45 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
       .style("width", cWidth)
       .style("height", cHeight);
 
-  //legend
-  const legend_g = svg.append("g");
-  //add title
-  legend_g
-    .append("text")
-    .attr("x", w / 4)
-    .attr("y", 40)
-    .attr("font-size", 18)
-    .text(`${bgd.label} - Predicted`);
-  legend_g
-    .append("text")
-    .attr("x", w / 4)
-    .attr("y", 60)
-    .attr("font-size", 18)
-    .text("cash flow & cash balance");
-  //add legends
-  legend_g
-    .append("rect")
-    .attr("x", w / 2 - 30)
-    .attr("y", 28)
-    .attr("width", 15)
-    .attr("height", 15)
-    .attr("fill", ei.color.total_in);
-  legend_g
-    .append("text")
-    .attr("x", w / 2)
-    .attr("y", 40)
-    .text("Total In");
-  legend_g
-    .append("rect")
-    .attr("x", w / 2 - 30)
-    .attr("y", 48)
-    .attr("width", 15)
-    .attr("height", 15)
-    .attr("fill", ei.color.total_out);
-  legend_g
-    .append("text")
-    .attr("x", w / 2)
-    .attr("y", 60)
-    .text("Total Out");
-  legend_g
-    .append("circle")
-    .attr("cx", w / 2 + 120)
-    .attr("cy", 35)
-    .attr("r", 5)
-    .attr("fill", "white")
-    .attr("stroke", ei.color[bgd.value])
-    .attr("stroke-width", 3);
-  legend_g
-    .append("text")
-    .attr("x", w / 2 + 135)
-    .attr("y", 40)
-    .text(bgd.label);
+  d3.select("#bar-chart-title").html(
+    `${bgd.label} - Predicted<br>cash flow & cash balance`
+  );
+
+  let legend_html_str = `<table>
+          <tr>
+            <td>
+              <div class="cell2">
+                <svg width="15" height="15"><rect width="15" height="15" fill="${
+                  ei.color.total_in
+                }"/></svg>&nbsp;Total In
+              </div>
+            </td>
+            <td>
+              <div class="cell2">
+                <svg width="20" height="20"><circle cx="10" cy="10" r="5" fill="white" stroke-width="3" stroke="${
+                  ei.color[bgd.value]
+                }"/></svg>&nbsp;${bgd.label}
+              </div>
+            </td>        
+          </tr>
+          <tr>
+            <td>
+              <div class="cell2">
+                <svg width="15" height="15"><rect width="15" height="15" fill="${
+                  ei.color.total_out
+                }"/></svg>&nbsp;Total Out
+              </div>
+            </td>
+          </tr>
+        </table>`;
+
+  d3.select("#bar-chart-legends").html(legend_html_str);
+  const tooltip = d3
+    .select("body")
+    .append("div")
+    .attr("id", "bar-tooltip")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
 
   let days = bgd.data.map(d => d.date),
     available_y_values = [
@@ -367,48 +381,6 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
         .y(d => y(d.total))(d.data)
     );
 
-  //tooltip
-  const tooltipG = svgG.append("g").attr("class", "tool-tip");
-  //indicator line
-  const indicator = svgG
-    .append("path")
-    .attr("class", "indicator")
-    .attr("stroke", "grey")
-    .attr("stroke-width", 1)
-    .attr("stroke-dasharray", "3, 3");
-
-  //Append invisible rect for bisect data
-  svgG
-    .append("rect")
-    .attr("width", w)
-    .attr("height", h)
-    .attr("fill", "transparent")
-    .on("mousemove", function() {
-      let date = scaleBandInvert(x)(d3.mouse(this)[0]);
-      indicator.attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
-
-      svg.selectAll("circle").each(function() {
-        if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
-          d3.select(this).attr("r", 8);
-        } else {
-          d3.select(this).attr("r", 5);
-        }
-      });
-
-      let accInfo = getInfoFromDate([r_bgd], date);
-      tooltipG
-        .attr("transform", `translate(${x(date)}, ${h + 40})`)
-        .call(
-          callout,
-          x,
-          w,
-          date,
-          accInfo,
-          ["date", "total", "total_in", "total_out"],
-          ei
-        );
-    });
-
   //Draw the circles
   svgG
     .selectAll(".circle")
@@ -429,82 +401,88 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     .attr("stroke-width", 1.5)
     .attr("stroke-dasharray", "3, 3")
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
-}
-function callout(
-  g,
-  x = null,
-  w = 0,
-  date = "",
-  info = null,
-  fields = [],
-  ei = {}
-) {
-  if (!info) return g.style("display", "none");
 
-  g.style("display", null).style("pointer-events", "none");
-
-  g.selectAll("*").remove();
-
-  const info_len = Object.keys(info).length,
-    each_info_width = 160;
-
-  g.append("rect")
-    .attr("x", x(date) <= w / 2 ? 0 : -info_len * each_info_width + 15)
-    .attr("width", info_len * each_info_width)
-    .attr("height", (fields.length + 1) * 24)
-    .attr("stroke", ei.color.desc_body)
+  //indicator line
+  const indicator = svgG
+    .append("path")
+    .attr("class", "indicator")
+    .attr("stroke", "grey")
     .attr("stroke-width", 1)
-    .attr("fill", "#eaecf0");
-  g.append("rect")
-    .attr("x", x(date) <= w / 2 ? 0 : -info_len * each_info_width + 15)
-    .attr("width", 20)
-    .attr("stroke", ei.color.desc_head)
-    .attr("stroke-width", 1)
-    .attr("height", (fields.length + 1) * 24)
-    .attr("fill", ei.color.desc_head);
+    .attr("stroke-dasharray", "3, 3");
 
-  let x_step = 0,
-    x_start = 40;
+  //Append invisible rect for bisect data
+  svgG
+    .append("rect")
+    .attr("width", w)
+    .attr("height", h)
+    .attr("fill", "transparent") //will transparent
+    .on("mousemove", function() {
+      let date = scaleBandInvert(x)(d3.mouse(this)[0]);
 
-  for (let item in info) {
-    g.append("text")
-      .attr(
-        "x",
-        x(date) <= w / 2
-          ? x_start + x_step
-          : -info_len * each_info_width + x_start + x_step
-      )
-      .attr("y", 25)
-      .attr("font-size", 16)
-      .text(info[item].label);
-    for (let i = 0; i < fields.length; i++) {
-      g.append("text")
-        .attr(
-          "x",
-          x(date) <= w / 2
-            ? x_start + x_step
-            : -info_len * each_info_width + x_start + x_step
-        )
-        .attr("y", 25 + (i + 1) * 20)
-        .attr("font-size", 12)
-        .text(
-          i === 0
-            ? fields[i] +
-                ":" +
-                moment(info[item][fields[i]]).format("DD-MM-YYYY")
-            : fields[i] + ":" + withComma(Math.round(info[item][fields[i]]))
-        );
-    }
-    x_step += each_info_width;
-  }
+      svg.selectAll("circle").each(function() {
+        if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
+          d3.select(this).attr("r", 8);
+        } else {
+          d3.select(this).attr("r", 5);
+        }
+      });
+
+      indicator
+        .style("opacity", 1)
+        .attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
+      let strInner = getBarChartDataFromDate(r_bgd, date); // return htmlStr
+      let offsetTop = document.getElementById("bar-chart-container").offsetTop,
+        container_width = parseFloat(d3.select(".chart").style("width")),
+        tooltip_width = parseFloat(d3.select("#bar-tooltip").style("width")),
+        scroll_pos = document.getElementById("bar-chart").scrollLeft,
+        logo_height = parseFloat(d3.select("#bar-chart-logo").style("height"));
+
+      tooltip
+        .style("opacity", 1)
+        .html(strInner)
+        .style("left", () => {
+          tooltip_width = parseFloat(d3.select("#bar-tooltip").style("width"));
+          if (d3.event.pageX < container_width / 2) {            
+            return (
+              x(date) + x.bandwidth() / 2 + margin.left - scroll_pos + "px"
+            );
+          } else {            
+            return (
+              x(date) +
+              x.bandwidth() / 2 +
+              margin.left -
+              scroll_pos -
+              tooltip_width +
+              "px"
+            );
+          }
+        })
+        .style("top", offsetTop + margin.top + h + 30 + logo_height + "px")
+        .style("opacity", 0.9);
+    })
+    .on("mouseout", function() {
+      tooltip.style("opacity", 0);
+      indicator.style("opacity", 0);
+      svg.selectAll("circle").attr("r", 5);
+    });
 }
-
-function scaleBandInvert(scale) {
-  let domain = scale.domain();
-  let paddingOuter = scale(domain[0]);
-  let eachBand = scale.step();
-  return function(value) {
-    let index = Math.floor((value - paddingOuter) / eachBand);
-    return domain[Math.max(0, Math.min(index, domain.length - 1))];
-  };
+function drawDonutChart(gd, ei) {
+  console.log(d3.select("#donut-chart").style("width"), 'with')
+  // const margin = 40,
+  //   w = h = cWidth - margin * 2,    
+  //   svg = d3
+  //     .select("#donut-chart")
+  //     .append("svg")
+  //     .style("width", cWidth)
+  //     .style("height", cHeight);
+  
+  //add legends
+  let legend_html_str = `<table>`;
+  gd.forEach(each => {
+    legend_html_str += `<tr><td><div class='cell1'>
+    <svg width="15" height="15"><rect width="15" height="15" fill="${ei.color[each.value]}"/></svg>&nbsp;${each.label}
+      </div></td></tr>`;
+  })
+  legend_html_str += `</table>`; 
+  document.getElementById("donut-chart-legends").innerHTML = legend_html_str;
 }

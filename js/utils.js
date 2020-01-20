@@ -45,14 +45,51 @@ function replaceData(data) {
   }
   return r_data;
 }
-//get info from any date 
-function getInfoFromDate(data, strDate) {
-  let info = {};  
-  for(let item of data) {
-    info[item.value] = item.data.filter(d => d.date === strDate)[0]
-    info[item.value]["label"] = item.label
-  }  
-  return info  
+function scaleBandInvert(scale) {
+  let domain = scale.domain();
+  let paddingOuter = scale(domain[0]);
+  let eachBand = scale.step();
+  return function(value) {
+    let index = Math.floor((value - paddingOuter) / eachBand);
+    return domain[Math.max(0, Math.min(index, domain.length - 1))];
+  };
+}
+//get info from any date
+function getLineChartDataFromDate(data, strDate) {
+  let strHtml = "",
+    current;
+  strHtml += `<b class="b-date">Date: ${moment(strDate).format(
+    "DD-MM-YYYY"
+  )}</b>`;
+  strHtml += `<div class='tip-content'>`;
+  for (let item of data) {
+    strHtml += `<div class='tip-content-row'>`;
+    current = item.data.filter(d => d.date === strDate)[0];
+    strHtml += `<b>${item.label}</b>`;
+    strHtml += `Balance: ${withComma(Math.round(current.total))}<br/>`;
+    strHtml += `Total In: ${withComma(Math.round(current.total_in))}<br/>`;
+    strHtml += `Total Out: ${withComma(Math.round(current.total_out))}<br/>`;
+    strHtml += `</div>`;
+  }
+  strHtml += `</div>`;
+  return strHtml;
+}
+function getBarChartDataFromDate(data, strDate) {  
+  let strHtml = "",
+    current;
+  strHtml += `<b class="b-date">Date: ${moment(strDate).format(
+    "DD-MM-YYYY"
+  )}</b>`;
+  strHtml += `<div class='tip-content'>`;
+  strHtml += `<div class='tip-content-row'>`;
+  current = data.data.filter(d => d.date === strDate)[0];
+  strHtml += `<b>${data.label}</b>`;
+  strHtml += `Balance: ${withComma(Math.round(current.total))}<br/>`;
+  strHtml += `Total In: ${withComma(Math.round(current.total_in))}<br/>`;
+  strHtml += `Total Out: ${withComma(Math.round(current.total_out))}<br/>`;
+  strHtml += `</div>`;
+  strHtml += `</div>`;
+  return strHtml;
 }
 //replace data with diff step
 // function replaceWithDiff(data, key_name, diff_step) {
