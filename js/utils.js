@@ -54,6 +54,41 @@ function scaleBandInvert(scale) {
     return domain[Math.max(0, Math.min(index, domain.length - 1))];
   };
 }
+
+function getHotData(f_data, hot_days) {  
+  let hot = {}, html_str = '';
+  // html_str += `<div class='tip-content'>`;
+  for (let day of hot_days) {
+    let current = f_data.filter(d => d.value === day.item_type)[0];
+    hot[day.item_type] = current.data.filter(d => d.date === day.date)[0];
+    hot[day.item_type].label = current.label;    
+    hot[day.item_type].next_day = day.next_day || '';
+    // html_str += `<div class='tip-content-row'>`;
+    // html_str += `<b>Date: ${moment(day.date).format("DD-MM-YYYY")}</b>`;
+    // html_str += `<b>${current.label}</b>`;
+    // html_str += `Balance: ${
+    //   hot[day.item_type].total < 0
+    //     ? "(" + withComma(Math.round(Math.abs(hot[day.item_type].total))) + ")"
+    //     : withComma(Math.round(hot[day.item_type].total))
+    // }<br/>`;
+    // html_str += `Total In: ${
+    //   hot[day.item_type].total_in < 0
+    //     ? "(" + withComma(Math.round(Math.abs(hot[day.item_type].total_in))) + ")"
+    //     : withComma(Math.round(hot[day.item_type].total_in))
+    // }<br/>`;
+    // html_str += `Total Out: ${
+    //   hot[day.item_type].total_out < 0
+    //     ? "(" + withComma(Math.round(Math.abs(hot[day.item_type].total_out))) + ")"
+    //     : withComma(Math.round(hot[day.item_type].total_out))
+    // }<br/>`;
+    // html_str += `</div>`;
+  }
+  // html_str += `</div>`;
+  return {
+    h_data: hot,
+    html_str: html_str
+  };
+}
 //get info from any date
 function getLineChartDataFromDate(data, strDate) {
   let strHtml = "",
@@ -66,15 +101,27 @@ function getLineChartDataFromDate(data, strDate) {
     strHtml += `<div class='tip-content-row'>`;
     current = item.data.filter(d => d.date === strDate)[0];
     strHtml += `<b>${item.label}</b>`;
-    strHtml += `Balance: ${withComma(Math.round(current.total))}<br/>`;
-    strHtml += `Total In: ${withComma(Math.round(current.total_in))}<br/>`;
-    strHtml += `Total Out: ${withComma(Math.round(current.total_out))}<br/>`;
+    strHtml += `Balance: ${
+      current.total < 0
+        ? "(" + withComma(Math.round(Math.abs(current.total))) + ")"
+        : withComma(Math.round(current.total))
+    }<br/>`;
+    strHtml += `Total In: ${
+      current.total_in < 0
+        ? "(" + withComma(Math.round(Math.abs(current.total_in))) + ")"
+        : withComma(Math.round(current.total_in))
+    }<br/>`;
+    strHtml += `Total Out: ${
+      current.total_out < 0
+        ? "(" + withComma(Math.round(Math.abs(current.total_out))) + ")"
+        : withComma(Math.round(current.total_out))
+    }<br/>`;
     strHtml += `</div>`;
   }
   strHtml += `</div>`;
   return strHtml;
 }
-function getBarChartDataFromDate(data, strDate) {  
+function getBarChartDataFromDate(data, strDate) {
   let strHtml = "",
     current;
   strHtml += `<b class="b-date">Date: ${moment(strDate).format(
@@ -84,9 +131,21 @@ function getBarChartDataFromDate(data, strDate) {
   strHtml += `<div class='tip-content-row'>`;
   current = data.data.filter(d => d.date === strDate)[0];
   strHtml += `<b>${data.label}</b>`;
-  strHtml += `Balance: ${withComma(Math.round(current.total))}<br/>`;
-  strHtml += `Total In: ${withComma(Math.round(current.total_in))}<br/>`;
-  strHtml += `Total Out: ${withComma(Math.round(current.total_out))}<br/>`;
+  strHtml += `Balance: ${
+    current.total < 0
+      ? "(" + withComma(Math.round(Math.abs(current.total))) + ")"
+      : withComma(Math.round(current.total))
+  }<br/>`;
+  strHtml += `Total In: ${
+    current.total_in < 0
+      ? "(" + withComma(Math.round(Math.abs(current.total_in))) + ")"
+      : withComma(Math.round(current.total_in))
+  }<br/>`;
+  strHtml += `Total Out: ${
+    current.total_out < 0
+      ? "(" + withComma(Math.round(Math.abs(current.total_out))) + ")"
+      : withComma(Math.round(current.total_out))
+  }<br/>`;
   strHtml += `</div>`;
   strHtml += `</div>`;
   return strHtml;

@@ -26,9 +26,9 @@ function init() {
       }
     },
     f_data = normalizeData(data.calculation_basis_balances.items),
-    donut_data = 
-
-  drawLineChart(containerWidth, containerHeight, f_data, extra_info);
+    hot_data = getHotData(f_data, data.calculation_basis_balances.hot_days);
+    
+  drawLineChart(containerWidth, containerHeight, f_data, extra_info, hot_data);
   drawBarChart(
     containerWidth,
     containerHeight,

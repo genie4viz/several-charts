@@ -3232,6 +3232,31 @@ const data = {
         label: "Last 90 Days"
       }
     },
+    hot_days: [
+      {
+        date: "2020-01-14",
+        item_type: "avgseasonal",
+        next_day: 5
+      },
+      {
+        date: "2020-01-28",
+        item_type: "avgoneyear",
+      },
+      {
+        date: "2020-02-10",
+        item_type: "seasonal",
+        next_day: 8
+      },
+      {
+        date: "2020-02-27",
+        item_type: "mostrecent",
+      },
+      {
+        date: "2020-03-15",
+        item_type: "mostrecentquarter",
+        next_day: 10
+      },
+    ],
     currency_postfix: "",
     first_balance: 7062.94,
     currency_prefix: "£"

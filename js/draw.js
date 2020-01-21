@@ -1,21 +1,22 @@
 //draw functions
 
-function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
+function drawLineChart(cWidth, cHeight, gd, ei, hot_data) {
   //gd: graph data, ei: extra_info
 
-  const margin = { left: 70, top: 25, right: 50, bottom: 170 },
+  const margin = { left: 70, top: 25, right: 50, bottom: 180 },
     w = cWidth - margin.left - margin.right,
     h = cHeight - margin.top - margin.bottom,
     svg = d3
       .select("#line-chart")
       .append("svg")
+      .attr("id", "svg-line-chart")
       .style("width", cWidth)
       .style("height", cHeight);
 
   const legend_rows = 2,
     legend_cols = Math.round(gd.length / legend_rows);
 
-  d3.select("#line-chart-title").html(`Forecast spread 2018 vs 2019`);
+  d3.select("#line-chart-title").html(`90 Day Forecast Spread`);
 
   let legends = gd.map(d => ({ label: d.label, color: ei.color[d.value] }));
 
@@ -61,7 +62,7 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     r_gd.push({
       label: d.label,
       value: d.value,
-      data: replaceWithDay(d.data, diff_day, days)
+      data: replaceWithDay(d.data, 1, days)
     });
   });
 
@@ -143,12 +144,13 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     );
 
   //Draw the circles
-  r_gd.forEach(dd => {
+  r_gd.forEach((dd, i) => {
     svgG
-      .selectAll(".circle")
+      .selectAll(`.gen-circle circle-${i}`)
       .data(dd.data)
       .enter()
       .append("circle")
+      .attr("class", `gen-circle circle-${i}`)
       .attr("stroke", ei.color[dd.value])
       .attr("stroke-width", 3)
       .attr("fill", "white")
@@ -166,6 +168,10 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .attr("d", `M0 ${y(ei.main_bank_account_overdraft_limit)}h${w}z`);
 
   //Append invisible rect for bisect data
+  let offsetTop =
+      document.getElementById("line-chart-container").offsetTop || 0,
+    logo_height = parseFloat(d3.select("#line-chart-logo").style("height"));
+  const descG = svgG.append("g");
   svgG
     .append("rect")
     .attr("width", w)
@@ -174,7 +180,7 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
     .on("mousemove", function() {
       let date = scaleBandInvert(x)(d3.mouse(this)[0]);
 
-      svg.selectAll("circle").each(function() {
+      svgG.selectAll(".gen-circle").each(function() {
         if (d3.select(this).attr("cx") == x(date) + x.bandwidth() / 2) {
           d3.select(this).attr("r", 8);
         } else {
@@ -185,12 +191,11 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
       indicator
         .style("opacity", 1)
         .attr("d", `M${x(date) + x.bandwidth() / 2} 0v${h + 40}`);
-      let strInner = getLineChartDataFromDate(gd, date); // return htmlStr
-      let offsetTop = document.getElementById("line-chart-container").offsetTop,
+
+      let strInner = getLineChartDataFromDate(gd, date),
         container_width = parseFloat(d3.select(".chart").style("width")),
         tooltip_width = parseFloat(d3.select("#line-tooltip").style("width")),
-        scroll_pos = document.getElementById("line-chart").scrollLeft,
-        logo_height = parseFloat(d3.select("#line-chart-logo").style("height"));
+        scroll_pos = document.getElementById("line-chart").scrollLeft;
 
       tooltip
         .style("opacity", 1)
@@ -215,16 +220,185 @@ function drawLineChart(cWidth, cHeight, gd, ei, diff_day = 1) {
             );
           }
         })
-        .style("top", offsetTop + margin.top + h + 30 + logo_height + "px")
-        .style("opacity", 0.9);
+        .style("top", () => {
+          if (container_width <= 512) {
+            return offsetTop + margin.top + h + 80 + logo_height + "px";
+          } else {
+            return offsetTop + margin.top + h + 30 + logo_height + "px";
+          }
+        });
+
+      document.getElementById("line-chart-description").innerHTML = "";
+      descG.style("opacity", 0);
     })
     .on("mouseout", function() {
       tooltip.style("opacity", 0);
+      d3.select();
+      descG.style("opacity", 1);
+      descG.selectAll("*").remove();
+      let i = 0;
+      for (let item in hot_data.h_data) {
+        descG
+          .append("rect")
+          .attr("x", 10 + i * 140)
+          .attr("y", h + 30)
+          .attr("width", 130)
+          .attr("height", 120)
+          .attr("fill", "#eaecf0")
+          .attr("stroke", "#a2c2e7")
+          .attr("stroke-width", 1);
+        descG
+          .append("rect")
+          .attr("x", 10 + i * 140)
+          .attr("y", h + 30)
+          .attr("width", 12)
+          .attr("height", 120)
+          .attr("fill", "#1f265c")
+          .attr("stroke", "#1f265c")
+          .attr("stroke-width", 1);
+        descG
+          .append("circle")
+          .attr("class", "hot-circle")
+          .attr("cx", 40 + i * 140)
+          .attr("cy", h + 50)
+          .attr("r", 10)
+          .attr("fill", ei.color[item])
+          .attr("stroke", "white")
+          .attr("stroke-width", 5)
+          .style("cursor", "pointer");
+        descG
+          .append("text")
+          .attr("x", 40 + i * 140)
+          .attr("y", h + 50)
+          .attr("text-anchor", "middle")
+          .attr("dominant-baseline", "middle")
+          .attr("fill", "white")
+          .style("font-size", 14)
+          .text(i + 1);
+
+        if (hot_data.h_data[item].next_day) {
+          descG
+            .append("text")
+            .attr("x", 120 + i * 140)
+            .attr("y", h + 50)
+            .attr("text-anchor", "end")
+            .attr("dominant-baseline", "middle")
+            .text(`+${hot_data.h_data[item].next_day} days`);
+        }
+
+        descG
+          .append("text")
+          .attr("x", 20 + i * 140 + 10)
+          .attr("y", h + 80)
+          .text(`Date: ${moment(hot_data.h_data[item].date).format("DD-MM-YYYY")}`);
+        
+        descG
+          .append("text")
+          .attr("x", 20 + i * 140 + 10)
+          .attr("y", h + 95)
+          .text(hot_data.h_data[item].label);
+
+        descG
+          .append("text")
+          .attr("x", 20 + i * 140 + 10)
+          .attr("y", h + 110)
+          .text(`Balance: ${hot_data.h_data[item].total < 0 ? "(" + withComma(Math.round(Math.abs(hot_data.h_data[item].total))) + ")" : withComma(Math.round(hot_data.h_data[item].total))}`);
+
+        descG
+          .append("text")
+          .attr("x", 20 + i * 140 + 10)
+          .attr("y", h + 125)
+          .text(`Total In: ${hot_data.h_data[item].total_in < 0 ? "(" + withComma(Math.round(Math.abs(hot_data.h_data[item].total_in))) + ")" : withComma(Math.round(hot_data.h_data[item].total_in))}`);
+
+        descG
+          .append("text")
+          .attr("x", 20 + i * 140 + 10)
+          .attr("y", h + 140)
+          .text(`Total Out: ${hot_data.h_data[item].total_out < 0 ? "(" + withComma(Math.round(Math.abs(hot_data.h_data[item].total_out))) + ")" : withComma(Math.round(hot_data.h_data[item].total_out))}`);
+
+        i++;
+      }
+      //   i++;
+      //   let html_str = "", top = 0;
+      //   if (container_width <= 512) {
+      //     top = offsetTop + margin.top + h + 80 + logo_height;
+      //   } else {
+      //     top = offsetTop + margin.top + h + 30 + logo_height;
+      //   }
+      //   html_str += `<div class='description' style="left:${200 * (i - 1)}px;top:${top}px">`;
+      //   html_str += `<div class='tip-tag-content'>`;
+      //   html_str += `<div class='tip-tag'>`;
+      //   html_str += `<svg width="30" height="30">
+      //     <circle cx="15" cy="15" r="10" fill="${ei.color[item]}" stroke="white" stroke-width="4"></circle>
+      //     <text x="15" y="15" text-anchor="middle" dominant-baseline="middle" fill="white" font-size="14">${i}</text>
+      //   </svg>`;
+      //   html_str += `<b>${ hot_data.h_data[item].next_day ? '+' + hot_data.h_data[item].next_day + ' days' : ''}</b>`;
+      //   html_str += `</div>`
+      //   html_str += `<div class='tip-content-row'>`;
+      //   html_str += `<b>Date: ${moment(hot_data.h_data[item].date).format(
+      //     "DD-MM-YYYY"
+      //   )}</b>`;
+      //   html_str += `<b>${hot_data.h_data[item].label}</b>`;
+      //   html_str += `Balance: ${
+      //     hot_data.h_data[item].total < 0
+      //       ? "(" +
+      //         withComma(Math.round(Math.abs(hot_data.h_data[item].total))) +
+      //         ")"
+      //       : withComma(Math.round(hot_data.h_data[item].total))
+      //   }<br/>`;
+      //   html_str += `Total In: ${
+      //     hot_data.h_data[item].total_in < 0
+      //       ? "(" +
+      //         withComma(Math.round(Math.abs(hot_data.h_data[item].total_in))) +
+      //         ")"
+      //       : withComma(Math.round(hot_data.h_data[item].total_in))
+      //   }<br/>`;
+      //   html_str += `Total Out: ${
+      //     hot_data.h_data[item].total_out < 0
+      //       ? "(" +
+      //         withComma(Math.round(Math.abs(hot_data.h_data[item].total_out))) +
+      //         ")"
+      //       : withComma(Math.round(hot_data.h_data[item].total_out))
+      //   }<br/>`;
+      //   html_str += `</div>`;
+      //   html_str += `</div>`;
+      //   html_str += `</div>`;
+      //   total_inner += html_str;
+      // }
+
+      // document.getElementById("line-chart-description").innerHTML = total_inner;
       indicator.style("opacity", 0);
-      svg.selectAll("circle").attr("r", 5);
+      svg.selectAll(".gen-circle").attr("r", 5);
     });
+
+  //Add hot circles
+  let i = 0;
+  for (let item in hot_data.h_data) {
+    i++;
+    svgG
+      .append("circle")
+      .attr("class", "hot-circle")
+      .attr("cx", x(hot_data.h_data[item].date) + x.bandwidth() / 2)
+      .attr("cy", y(hot_data.h_data[item].total))
+      .attr("r", 12)
+      .attr("fill", ei.color[item])
+      .attr("stroke", "white")
+      .attr("stroke-width", 5)
+      .style("cursor", "pointer");
+    svgG
+      .append("text")
+      .attr("class", "hot-circle-text")
+      .attr("x", x(hot_data.h_data[item].date) + x.bandwidth() / 2)
+      .attr("y", y(hot_data.h_data[item].total))
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "middle")
+      .attr("fill", "white")
+      .style("font-size", 14)
+      .style("pointer-events", "none")
+      .text(i);
+  }
 }
-function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
+function drawBarChart(cWidth, cHeight, gd, duration_name, ei) {
   let bgd = gd.filter(d => d.value === duration_name)[0];
 
   const margin = { left: 70, top: 25, right: 50, bottom: 160 },
@@ -288,7 +462,7 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     r_bgd = {
       label: bgd.label,
       value: bgd.value,
-      data: replaceWithDay(bgd.data, diff_day, days)
+      data: replaceWithDay(bgd.data, 1, days)
     };
 
   //show skipped days
@@ -467,7 +641,9 @@ function drawBarChart(cWidth, cHeight, gd, duration_name, ei, diff_day = 1) {
     });
 }
 function drawDonutChart(gd) {
-  console.log(gd, "docunet");
+  //add title
+  document.getElementById("donut-chart-title").innerHTML = "Donut Chart";
+
   const colors = d3
     .scaleSequential()
     .domain([1, gd.length])
